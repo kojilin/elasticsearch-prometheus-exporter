@@ -76,6 +76,12 @@ public class PrometheusMetricsCatalog {
         logger.debug(String.format("Registered new counter %s", metric));
     }
 
+    public void incCounter(String metric, double value, String... labelValues) {
+        String[] extended_label_values = getExtendedLabelValues(labelValues);
+        Counter counter = (Counter) metrics.get(metric);
+        counter.labels(extended_label_values).inc(value);
+    }
+
     public void setCounter(String metric, double value, String... label_values) {
         String[] extended_label_values = getExtendedLabelValues(label_values);
         Counter counter = (Counter) metrics.get(metric);

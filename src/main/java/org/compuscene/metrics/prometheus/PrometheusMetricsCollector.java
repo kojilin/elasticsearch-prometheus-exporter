@@ -1,12 +1,13 @@
 package org.compuscene.metrics.prometheus;
 
-import io.prometheus.client.Summary;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.node.stats.NodeStats;
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsRequest;
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsResponse;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.logging.ESLogger;
+import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.http.HttpStats;
 import org.elasticsearch.indices.NodeIndicesStats;
 import org.elasticsearch.indices.breaker.AllCircuitBreakerStats;
@@ -19,11 +20,16 @@ import org.elasticsearch.script.ScriptStats;
 import org.elasticsearch.threadpool.ThreadPoolStats;
 import org.elasticsearch.transport.TransportStats;
 
+import io.prometheus.client.Summary;
+
 public class PrometheusMetricsCollector {
+
+    private final ESLogger logger = Loggers.getLogger(PrometheusMetricsCollector.class);
 
     private final Client client;
 
     private String cluster;
+
     private String node;
 
     private PrometheusMetricsCatalog catalog;
@@ -56,6 +62,16 @@ public class PrometheusMetricsCollector {
         registerCircuitBreakerMetrics();
         registerThreadPoolMetrics();
         registerFsMetrics();
+        registerSlowLogMetrics();
+    }
+
+    private void registerSlowLogMetrics() {
+        try {
+            Class.forName("org.apache.log4j.Logger");
+            SlowLogAppender.initialize(node, catalog);
+        } catch (Throwable e) {
+            logger.warn("register slow log metrics failed", e);
+        }
     }
 
     private void registerClusterMetrics() {

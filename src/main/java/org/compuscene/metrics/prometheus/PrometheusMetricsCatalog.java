@@ -89,6 +89,12 @@ public class PrometheusMetricsCatalog {
         }
     }
 
+    public void incCounter(String metric, double value, String... labelValues) {
+        String[] extended_label_values = getExtendedLabelValues(labelValues);
+        Counter counter = (Counter) metrics.get(metric);
+        counter.labels(extended_label_values).inc(value);
+    }
+
     public void registerSummaryTimer(String metric, String help, String... labels) {
         Summary summary = Summary.build().
                 name(metric_prefix + metric).

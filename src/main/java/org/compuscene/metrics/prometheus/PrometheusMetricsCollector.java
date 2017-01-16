@@ -1,6 +1,5 @@
 package org.compuscene.metrics.prometheus;
 
-import io.prometheus.client.Summary;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.node.stats.NodeStats;
@@ -18,6 +17,8 @@ import org.elasticsearch.monitor.process.ProcessStats;
 import org.elasticsearch.script.ScriptStats;
 import org.elasticsearch.threadpool.ThreadPoolStats;
 import org.elasticsearch.transport.TransportStats;
+
+import io.prometheus.client.Summary;
 
 public class PrometheusMetricsCollector {
 
@@ -55,6 +56,17 @@ public class PrometheusMetricsCollector {
         registerCircuitBreakerMetrics();
         registerThreadPoolMetrics();
         registerFsMetrics();
+        registerSlowLogMetrics();
+    }
+
+    private void registerSlowLogMetrics() {
+        try {
+            Class.forName("org.apache.logging.log4j.core.LoggerContext");
+            SlowLogAppender slowLogAppender = new SlowLogAppender(node, catalog);
+            slowLogAppender.start();
+        } catch (ClassNotFoundException ignore) {
+
+        }
     }
 
     private void registerClusterMetrics() {

@@ -35,7 +35,7 @@ public class PrometheusMetricsCollector {
         NodesStatsRequest nodesStatsRequest = new NodesStatsRequest("_local").all();
         NodesStatsResponse nodesStatsResponse = this.client.admin().cluster().nodesStats(nodesStatsRequest).actionGet();
 
-        cluster = nodesStatsResponse.getClusterName().toString();
+        cluster = nodesStatsResponse.getClusterName().value();
         node = nodesStatsResponse.getNodes().get(0).getHostname();
         catalog = new PrometheusMetricsCatalog(cluster, "es_");
 
@@ -345,7 +345,10 @@ public class PrometheusMetricsCollector {
             catalog.setGauge("indices_segments_memory_bytes", idx.getSegments().getTermVectorsMemoryInBytes(), node, "termvectors");
             catalog.setGauge("indices_segments_memory_bytes", idx.getSegments().getVersionMapMemoryInBytes(), node, "versionmap");
 
-            //TODO getSuggest() not existing in 5.0
+            catalog.setGauge("indices_suggest_current_number", idx.getSearch().getTotal().getSuggestCurrent(), node);
+            catalog.setCounter("indices_suggest_count", idx.getSearch().getTotal().getSuggestCount(), node);
+            catalog.setCounter("indices_suggest_time_seconds", idx.getSearch().getTotal().getSuggestTimeInMillis() / 1000.0, node);
+
 
             catalog.setGauge("indices_requestcache_memory_size_bytes", idx.getRequestCache().getMemorySizeInBytes(), node);
             catalog.setCounter("indices_requestcache_hit_count", idx.getRequestCache().getHitCount(), node);
